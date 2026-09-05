@@ -12,6 +12,7 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from pydantic import BaseModel, Field
@@ -214,13 +215,8 @@ def run_gemini_agent(client: Optional[genai.Client], model_name: str, prompt: st
 
 
 @app.get("/")
-def root():
-    return {
-        "service": "EscrowAI API",
-        "docs": "/docs",
-        "health": "/health",
-        "verify_pr": "/verify-pr",
-    }
+async def serve_dashboard():
+    return FileResponse("index.html")
     
 
 
