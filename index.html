@@ -60,21 +60,17 @@
         <!-- Inputs -->
         <div class="space-y-6">
             <div>
+                <!-- Label and Demo Button Row -->
                 <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">GitHub Pull Request
-                        Diff URL</label>
-                    <button type="button"
-                        onclick="document.getElementById('pr-url').value='https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff'; document.getElementById('url-error').classList.add('hidden');"
-                        class="text-[11px] text-blue-400 hover:text-blue-300 transition cursor-pointer">
-                        Fill Demo Sample
-                    </button>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">GitHub Pull Request Diff URL</label>
+                    <button type="button" onclick="document.getElementById('pr-url').value = 'https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff'" class="text-xs text-blue-400 hover:text-blue-300 transition font-semibold">Fill Demo Sample</button>
                 </div>
-                <!-- Clean placeholder without hardcoded default -->
-                <input type="url" id="pr-url" placeholder="e.g., https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff"
-                    class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all"
-                    required>
-                <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Please provide a valid GitHub diff or PR
-                    link.</p>
+                
+                <!-- Input Box -->
+                <input type="url" id="pr-url" placeholder="e.g., https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff" class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all" required>
+                
+                <!-- Error Message -->
+                <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Please provide a valid GitHub diff or PR link.</p>
             </div>
 
             <div>
