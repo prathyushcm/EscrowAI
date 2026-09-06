@@ -57,6 +57,10 @@ class CreatePaymentRequest(BaseModel):
         default="escrow_tx_01",
         description="Receipt identifier for tracking the escrow order",
     )
+    pr_url: Optional[str] = Field(
+        default=None,
+        description="Optional GitHub PR URL to validate code changes before order generation",
+    )
 
 
 class VerifyPRRequest(BaseModel):
@@ -423,6 +427,7 @@ SECURITY_ANALYSIS: <Detailed assessment of security flaws or vulnerabilities>
 async def create_payment(
     request_data: Optional[CreatePaymentRequest] = None,
     amount: Optional[int] = None,
+    pr_url: Optional[str] = None,
 ):
     """Generate a Razorpay Order for escrow milestone payment / deposit."""
     global client
@@ -437,9 +442,12 @@ async def create_payment(
                 detail="Razorpay API credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) missing from environment.",
             )
 
-    # Resolve amount (support query param, JSON request body, or default to 500)
+    # Resolve amount and pr_url (support query param, JSON request body, or default to 500)
     actual_amount = amount if amount is not None else (
         request_data.amount if request_data and request_data.amount is not None else 500
+    )
+    actual_pr_url = pr_url if pr_url is not None else (
+        request_data.pr_url if request_data and request_data.pr_url else None
     )
     receipt = (
         request_data.receipt
@@ -447,6 +455,32 @@ async def create_payment(
         else "escrow_tx_01"
     )
 
+    # 1. VALIDATION GUARDRAIL: Check if the URL actually has code
+    if actual_pr_url:
+        clean_url = actual_pr_url.strip()
+        if "github.com" in clean_url and not clean_url.endswith((".diff", ".patch")) and "/pull/" in clean_url:
+            clean_url = clean_url.rstrip("/") + ".diff"
+
+        try:
+            headers = {
+                "User-Agent": "EscrowAI-Agent/0.2",
+                "Accept": "application/vnd.github.v3.diff, text/plain, */*",
+            }
+            response = requests.get(clean_url, headers=headers, timeout=10)
+            
+            # If the link is broken, 404, or not public
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Repository not found or link is private.")
+            
+            # If the file exists but has no code inside (empty repository/PR)
+            code_diff = response.text
+            if not code_diff or len(code_diff.strip()) < 10:
+                raise HTTPException(status_code=400, detail="No code changes detected in this PR.")
+                
+        except requests.RequestException:
+            raise HTTPException(status_code=400, detail="Failed to fetch code from GitHub.")
+
+    # 2. ESCROW GENERATION (Only runs if the code above passes)
     try:
         # Create an Order (Amount is in paise, so 500 * 100)
         order_data = {

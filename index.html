@@ -63,11 +63,11 @@
                 <!-- Label and Demo Button Row -->
                 <div class="flex justify-between items-center mb-2">
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">GitHub Pull Request Diff URL</label>
-                    <button type="button" onclick="document.getElementById('pr-url').value = 'https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff'" class="text-xs text-blue-400 hover:text-blue-300 transition font-semibold">Fill Demo Sample</button>
+                    <button type="button" onclick="document.getElementById('pr-url').value = 'https://github.com/fastapi/fastapi/pull/1.diff'" class="text-xs text-blue-400 hover:text-blue-300 transition font-semibold">Fill Demo Sample</button>
                 </div>
                 
                 <!-- Input Box -->
-                <input type="url" id="pr-url" placeholder="e.g., https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff" class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all" required>
+                <input type="url" id="pr-url" placeholder="e.g., https://github.com/fastapi/fastapi/pull/1.diff" class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all" required>
                 
                 <!-- Error Message -->
                 <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Please provide a valid GitHub diff or PR link.</p>
@@ -175,14 +175,21 @@
 
             try {
                 // 4. Call Python Backend to generate Razorpay Escrow Order
-                const response = await fetch(`${API_BASE}/generate-escrow-payment?amount=${encodeURIComponent(amount)}`, {
+                const response = await fetch(`${API_BASE}/generate-escrow-payment?amount=${encodeURIComponent(amount)}&pr_url=${encodeURIComponent(urlInput)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: parseInt(amount) || 500, pr_url: urlInput })
                 });
 
                 if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Server returned HTTP ${response.status}: ${errText}`);
+                    let errMsg = `HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        errMsg = errJson.detail || errMsg;
+                    } catch (e) {
+                        errMsg = await response.text() || errMsg;
+                    }
+                    throw new Error(errMsg);
                 }
 
                 const data = await response.json();
