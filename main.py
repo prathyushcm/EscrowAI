@@ -10,6 +10,7 @@ import json
 import re
 import uuid
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -19,7 +20,6 @@ from pydantic import BaseModel, Field
 import razorpay
 import requests
 import uvicorn
-import time
 
 # 1. FIRST, define the app
 app = FastAPI(
@@ -36,6 +36,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 3. Razorpay Client Initialization
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+client = (
+    razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET
+    else None
+)
+
+
+class CreatePaymentRequest(BaseModel):
+    amount: Optional[int] = Field(
+        default=500,
+        gt=0,
+        description="Escrow payout/deposit amount in INR (e.g., 500 for ₹500, converted to paise)",
+    )
+    receipt: Optional[str] = Field(
+        default="escrow_tx_01",
+        description="Receipt identifier for tracking the escrow order",
+    )
 
 
 class VerifyPRRequest(BaseModel):
@@ -231,6 +252,13 @@ def health_check():
 
 @app.post("/verify-pr")
 def verify_pr(request: VerifyPRRequest):
+    payload = request
+    parsed_url = urlparse(payload.pr_url)
+    if "github.com" not in parsed_url.netloc and "githubusercontent.com" not in parsed_url.netloc:
+        raise HTTPException(status_code=400, detail="Invalid source: Only GitHub PR links are permitted.")
+    if not parsed_url.path.endswith(('.diff', '.patch')):
+        raise HTTPException(status_code=400, detail="Invalid format: GitHub PR URL must end with .diff or .patch")
+
     # 1. Fetch GitHub PR diff using requests
     diff_text, is_fallback_diff = fetch_pr_diff(request.pr_url, request.diff_content)
 
@@ -343,13 +371,26 @@ SECURITY_ANALYSIS: <Detailed assessment of security flaws or vulnerabilities>
                 payment_link = razorpay_link.get('short_url')
                 payment_link_id = razorpay_link.get('id')
                 
+                # Also generate a Razorpay Order for frontend Checkout.js popup modal
+                order_id = None
+                try:
+                    order_data = {
+                        "amount": int(request.payout_amount),
+                        "currency": "INR",
+                        "receipt": f"escrow_{uuid.uuid4().hex[:8]}",
+                    }
+                    order = client.order.create(data=order_data)
+                    order_id = order.get("id")
+                except Exception as ord_err:
+                    print(f"Razorpay Order creation notice: {ord_err}")
+                
         except Exception as e:
             # If Razorpay fails, it will now print the exact reason to your dashboard
             payment_link = f"RAZORPAY API ERROR: {str(e)}"
     else:
         payout_status = "REJECTED_BY_AI_AGENTS"
 
-    # 5. Return JSON response containing AST summary, AI agent feedback, and Razorpay payment link
+    # 5. Return JSON response containing AST summary, AI agent feedback, Razorpay payment link & order ID
     return {
         "status": "success",
         "pr_url": request.pr_url,
@@ -365,7 +406,60 @@ SECURITY_ANALYSIS: <Detailed assessment of security flaws or vulnerabilities>
         },
         "payment_link": payment_link,
         "payment_link_id": payment_link_id,
+        "order_id": order_id if both_approved else None,
+        "key_id": os.getenv("RAZORPAY_KEY_ID") if both_approved else None,
     }
+
+
+@app.post("/generate-escrow-payment")
+async def create_payment(
+    request_data: Optional[CreatePaymentRequest] = None,
+    amount: Optional[int] = None,
+):
+    """Generate a Razorpay Order for escrow milestone payment / deposit."""
+    global client
+    if not client:
+        rzp_id = os.getenv("RAZORPAY_KEY_ID")
+        rzp_secret = os.getenv("RAZORPAY_KEY_SECRET")
+        if rzp_id and rzp_secret:
+            client = razorpay.Client(auth=(rzp_id, rzp_secret))
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Razorpay API credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) missing from environment.",
+            )
+
+    # Resolve amount (support query param, JSON request body, or default to 500)
+    actual_amount = amount if amount is not None else (
+        request_data.amount if request_data and request_data.amount is not None else 500
+    )
+    receipt = (
+        request_data.receipt
+        if request_data and request_data.receipt
+        else "escrow_tx_01"
+    )
+
+    try:
+        # Create an Order (Amount is in paise, so 500 * 100)
+        order_data = {
+            "amount": actual_amount * 100,
+            "currency": "INR",
+            "receipt": receipt,
+        }
+        order = client.order.create(data=order_data)
+
+        # Return the new order_id to your frontend
+        return {
+            "order_id": order["id"],
+            "amount": order_data["amount"],
+            "currency": order_data["currency"],
+            "key_id": os.getenv("RAZORPAY_KEY_ID"),
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate Razorpay order: {str(exc)}",
+        )
 
 
 if __name__ == "__main__":
