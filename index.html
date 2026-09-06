@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EscrowAI - Smart Milestone Verification</title>
     <!-- Tab Logo -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
@@ -13,32 +15,43 @@
             border-top-color: #3b82f6;
             animation: spinner 1.5s linear infinite;
         }
+
         @keyframes spinner {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         /* Custom scrollbar for terminal */
         .terminal-scroll::-webkit-scrollbar {
             width: 6px;
         }
+
         .terminal-scroll::-webkit-scrollbar-thumb {
             background-color: #4B5563;
             border-radius: 10px;
         }
     </style>
 </head>
+
 <body class="bg-gray-950 text-white flex items-center justify-center min-h-screen p-4 font-sans">
-    
+
     <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-800">
         <!-- Header -->
         <div class="flex items-center space-x-4 mb-8">
             <div class="text-5xl">🤖</div>
             <div class="flex-1">
-                <h1 class="text-3xl font-extrabold text-white tracking-tight">Escrow<span class="text-blue-500">AI</span></h1>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">Escrow<span
+                        class="text-blue-500">AI</span></h1>
                 <p class="text-sm text-gray-400 mt-1">Autonomous PR Audit & Instant Razorpay Settlement</p>
             </div>
             <!-- Glowing Live Badge -->
-            <span class="bg-green-900/50 text-green-400 text-xs font-bold px-3 py-1.5 rounded-full border border-green-700/50 flex items-center shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+            <span
+                class="bg-green-900/50 text-green-400 text-xs font-bold px-3 py-1.5 rounded-full border border-green-700/50 flex items-center shadow-[0_0_10px_rgba(34,197,94,0.2)]">
                 <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
                 v0.2 Live Swarm
             </span>
@@ -48,47 +61,61 @@
         <div class="space-y-6">
             <div>
                 <div class="flex justify-between items-center mb-2">
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">GitHub Pull Request Diff URL</label>
-                    <button type="button" onclick="document.getElementById('pr-url').value='https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff'; document.getElementById('url-error').classList.add('hidden');" class="text-[11px] text-blue-400 hover:text-blue-300 transition cursor-pointer">
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest">GitHub Pull Request
+                        Diff URL</label>
+                    <button type="button"
+                        onclick="document.getElementById('pr-url').value='https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff'; document.getElementById('url-error').classList.add('hidden');"
+                        class="text-[11px] text-blue-400 hover:text-blue-300 transition cursor-pointer">
                         Fill Demo Sample
                     </button>
                 </div>
                 <!-- Clean placeholder without hardcoded default -->
-                <input type="url" id="pr-url" placeholder="e.g., https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff" class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all" required>
-                <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Please provide a valid GitHub diff or PR link.</p>
+                <input type="url" id="pr-url" placeholder="e.g., https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff"
+                    class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all"
+                    required>
+                <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Please provide a valid GitHub diff or PR
+                    link.</p>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Escrow Milestone Payout (₹ INR)</label>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Escrow Milestone
+                    Payout (₹ INR)</label>
                 <div class="relative">
                     <span class="absolute left-4 top-4 text-gray-500 font-bold">₹</span>
-                    <input type="number" id="escrow-amount" value="500" class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 pl-8 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all" required>
+                    <input type="number" id="escrow-amount" value="500"
+                        class="w-full bg-gray-950 text-gray-200 border border-gray-700 rounded-xl p-4 pl-8 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        required>
                 </div>
             </div>
 
             <!-- Action Button -->
-            <button id="audit-btn" onclick="startAudit()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5 mt-4 cursor-pointer">
+            <button id="audit-btn" onclick="startAudit()"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transform hover:-translate-y-0.5 mt-4 cursor-pointer">
                 <span id="btn-text">Run Multi-Agent Consensus Audit</span>
-                <div id="loading-spinner" class="loader ease-linear rounded-full border-2 border-t-2 border-white h-5 w-5 ml-3 hidden"></div>
+                <div id="loading-spinner"
+                    class="loader ease-linear rounded-full border-2 border-t-2 border-white h-5 w-5 ml-3 hidden"></div>
             </button>
         </div>
 
         <!-- Terminal UI for Hackathon Demo -->
         <div id="terminal-container" class="mt-8 hidden">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Swarm Activity Log</label>
-            <div id="terminal-window" class="bg-black/80 rounded-xl border border-gray-800 p-4 h-48 overflow-y-auto terminal-scroll font-mono text-xs text-green-400 shadow-inner">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Swarm Activity
+                Log</label>
+            <div id="terminal-window"
+                class="bg-black/80 rounded-xl border border-gray-800 p-4 h-48 overflow-y-auto terminal-scroll font-mono text-xs text-green-400 shadow-inner">
                 <!-- AI Logs stream here -->
             </div>
         </div>
     </div>
 
     <script>
+        const API_BASE = (window.location.protocol === 'file:' || !window.location.port) ? 'http://127.0.0.1:8000' : '';
         let currentKeyId = null;
 
         // Securely fetch public Razorpay key ID from backend (never hardcoded in Git)
         async function fetchConfig() {
             try {
-                const response = await fetch('/config');
+                const response = await fetch(`${API_BASE}/config`);
                 const config = await response.json();
                 if (config && config.razorpay_key_id) {
                     currentKeyId = config.razorpay_key_id;
@@ -123,9 +150,9 @@
             btn.classList.remove('hover:-translate-y-0.5');
             btnText.innerText = "Agents are auditing...";
             spinner.classList.remove('hidden');
-            
+
             terminalContainer.classList.remove('hidden');
-            terminalWindow.innerHTML = ''; 
+            terminalWindow.innerHTML = '';
 
             // 3. Stream dynamic swarm telemetry logs for the live demo
             const logs = [
@@ -152,10 +179,16 @@
 
             try {
                 // 4. Call Python Backend to generate Razorpay Escrow Order
-                const response = await fetch('/generate-escrow-payment?amount=' + encodeURIComponent(amount), {
+                const response = await fetch(`${API_BASE}/generate-escrow-payment?amount=${encodeURIComponent(amount)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Server returned HTTP ${response.status}: ${errText}`);
+                }
+
                 const data = await response.json();
                 resetUI();
 
@@ -179,7 +212,7 @@
             } catch (err) {
                 console.error(err);
                 const errLog = document.createElement('p');
-                errLog.innerText = "> [ERROR] Server took too long or backend is offline. Check terminal.";
+                errLog.innerText = `> [ERROR] ${err.message || 'Cannot reach FastAPI backend. Make sure uvicorn main:app is running.'}`;
                 errLog.className = "text-red-500 font-bold mt-2";
                 terminalWindow.appendChild(errLog);
                 terminalWindow.scrollTop = terminalWindow.scrollHeight;
@@ -191,7 +224,7 @@
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('loading-spinner');
             const btn = document.getElementById('audit-btn');
-            
+
             btn.disabled = false;
             btn.classList.replace('bg-gray-700', 'bg-blue-600');
             btn.classList.replace('hover:bg-gray-700', 'hover:bg-blue-500');
@@ -207,19 +240,39 @@
                 return;
             }
 
+            if (typeof Razorpay === 'undefined') {
+                alert("Razorpay Checkout SDK is still loading or blocked. Please check your internet connection and refresh.");
+                return;
+            }
+
             var options = {
                 "key": activeKey, // Fetched securely from backend .env, never hardcoded in git!
                 "amount": amount,
                 "currency": "INR",
                 "name": "EscrowAI",
                 "description": "Milestone Settlement",
-                "order_id": orderId, 
-                "handler": function (response){
+                "order_id": orderId,
+                "prefill": {
+                    "name": "Freelance Contributor",
+                    "email": "developer@example.com",
+                    "contact": "+919876543210"
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        const terminalWindow = document.getElementById('terminal-window');
+                        const dismissLog = document.createElement('p');
+                        dismissLog.innerText = "> [CHECKOUT DISMISSED] Payment window was closed by user.";
+                        dismissLog.className = "text-yellow-400 font-mono mt-1";
+                        terminalWindow.appendChild(dismissLog);
+                        terminalWindow.scrollTop = terminalWindow.scrollHeight;
+                    }
+                },
+                "handler": function (response) {
                     // 1. Update the terminal log
                     const terminalWindow = document.getElementById('terminal-window');
                     terminalWindow.innerHTML += `<p class="mt-3 text-green-400 font-bold bg-green-900/40 p-2 rounded border border-green-700">> [SUCCESS] Txn ${response.razorpay_payment_id} Captured. Escrow funds released!</p>`;
                     terminalWindow.scrollTop = terminalWindow.scrollHeight;
-                    
+
                     // 2. Replace the form with a beautiful Animated Success Card!
                     const formContainer = document.querySelector('.space-y-6');
                     formContainer.innerHTML = `
@@ -243,4 +296,5 @@
         }
     </script>
 </body>
+
 </html>
