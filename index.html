@@ -108,12 +108,31 @@
     <script>
         let currentOrderId = null;
         let currentAmount = 50000;
-        let currentKeyId = "rzp_test_TY3R8h8o31dckt";
+        let currentKeyId = null;
+
+        // Fetch Razorpay public key securely from backend at runtime (zero hardcoded keys in git)
+        async function fetchConfig() {
+            try {
+                const response = await fetch('/config');
+                const config = await response.json();
+                if (config && config.razorpay_key_id) {
+                    currentKeyId = config.razorpay_key_id;
+                }
+            } catch (err) {
+                console.warn("Could not load backend public config:", err);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchConfig);
 
         // Call this when your swarm approves the PR
         function openCheckout(orderId, amount, keyId) {
+            const activeKey = keyId || currentKeyId;
+            if (!activeKey) {
+                alert("Razorpay Key ID is not configured. Please ensure RAZORPAY_KEY_ID is set in your backend .env file.");
+                return;
+            }
             var options = {
-                "key": keyId || "rzp_test_TY3R8h8o31dckt", // Put your Test Key ID here
+                "key": activeKey, // Fetched securely from backend .env, never hardcoded in git!
                 "amount": amount,
                 "currency": "INR",
                 "name": "EscrowAI",
@@ -187,7 +206,7 @@
                     payContainer.classList.remove('hidden');
 
                     currentAmount = data.payout_amount || (amountInRupees * 100);
-                    currentKeyId = data.key_id || "rzp_test_TY3R8h8o31dckt";
+                    currentKeyId = data.key_id || currentKeyId;
                     currentOrderId = data.order_id;
 
                     if (data.payment_link && !data.payment_link.includes("ERROR")) {

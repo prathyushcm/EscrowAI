@@ -250,6 +250,14 @@ def health_check():
     }
 
 
+@app.get("/config")
+def get_public_config():
+    """Safely return public frontend config (Key ID only) from .env without hardcoding."""
+    return {
+        "razorpay_key_id": os.getenv("RAZORPAY_KEY_ID", "")
+    }
+
+
 @app.post("/verify-pr")
 def verify_pr(request: VerifyPRRequest):
     payload = request
