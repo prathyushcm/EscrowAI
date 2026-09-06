@@ -4,95 +4,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EscrowAI - Smart Milestone Verification</title>
+    <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Razorpay Standard Checkout SDK -->
+    <!-- Razorpay Checkout SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        /* Custom spinner animation */
+        .loader {
+            border-top-color: #3b82f6;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 min-h-screen flex items-center justify-center p-4 sm:p-6 text-slate-200 font-sans">
-
-    <!-- Card Container -->
-    <div class="bg-slate-900/80 backdrop-blur-xl border border-slate-700/80 rounded-2xl shadow-2xl max-w-3xl w-full p-6 sm:p-8">
+<body class="bg-gray-950 text-slate-200 flex items-center justify-center min-h-screen p-4 sm:p-6 font-sans">
+    
+    <!-- Main UI Card -->
+    <div class="bg-gray-900/90 backdrop-blur-xl p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-xl border border-gray-800">
         
         <!-- Header -->
-        <div class="flex items-center justify-between border-b border-slate-800 pb-5 mb-6">
-            <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                    <span class="text-2xl">🤖</span>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Escrow<span class="text-blue-400">AI</span></h1>
-                    <p class="text-xs sm:text-sm text-slate-400 font-medium">Autonomous PR Audit & Instant Razorpay Settlement</p>
-                </div>
+        <div class="flex items-center space-x-3 mb-6 border-b border-gray-800 pb-5">
+            <div class="text-4xl">🤖</div>
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-wide">Escrow<span class="text-blue-500">AI</span></h1>
+                <p class="text-xs text-gray-400">Autonomous PR Audit & Instant Razorpay Settlement</p>
             </div>
-            <span class="px-3 py-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-                v0.2 Live Swarm
-            </span>
+            <span class="ml-auto bg-green-950 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-green-700/60">v0.2 Live Swarm</span>
         </div>
 
-        <!-- Form Section -->
-        <div id="formSection" class="space-y-4">
+        <!-- Form Inputs -->
+        <div class="space-y-4">
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">GitHub Pull Request Diff URL</label>
-                <input id="prUrl" type="text" value="https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff" 
-                       class="w-full p-3 bg-slate-950/60 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-100 text-sm outline-none transition">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">GitHub Pull Request Diff URL</label>
+                <input type="url" id="pr-url" value="https://patch-diff.githubusercontent.com/raw/torvalds/linux/pull/1.diff" 
+                       placeholder="https://patch-diff.githubusercontent.com/..." 
+                       class="w-full bg-gray-950 text-gray-200 border border-gray-700/80 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" required>
+                <!-- Hidden error message -->
+                <p id="url-error" class="text-red-400 text-xs mt-2 hidden">⚠️ Invalid URL. Please provide a valid GitHub raw diff or PR link.</p>
             </div>
-            
+
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Escrow Milestone Payout (₹ INR)</label>
-                <input id="amount" type="number" value="500" 
-                       class="w-full p-3 bg-slate-950/60 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-100 text-sm outline-none transition">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Escrow Milestone Payout (₹ INR)</label>
+                <input type="number" id="escrow-amount" value="500" 
+                       class="w-full bg-gray-950 text-gray-200 border border-gray-700/80 rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition" required>
             </div>
 
             <!-- Pre-loaded Secure Test Patch Payload -->
-            <input type="hidden" id="diffContent" value="import re\n\nclass MockDatabase:\n    def __init__(self):\n        self.ledger = set()\n    def insert_atomic(self, tx_id):\n        if tx_id in self.ledger:\n            return False\n        self.ledger.add(tx_id)\n        return True\n\ndb = MockDatabase()\n\ndef process_milestone_payment(milestone_id, amount, recipient_address):\n    if type(amount) is not int or amount <= 0:\n        raise ValueError('Strictly positive integer required')\n    if not re.match(r'^0x[a-fA-F0-9]{40}$', recipient_address):\n        raise ValueError('Invalid EVM hex address')\n    if not db.insert_atomic(milestone_id):\n        raise ValueError('Replay attack')\n    return True\n\ndef verify_contract_compliance(pr_diff, acceptance_criteria):\n    if not pr_diff or len(pr_diff) < 10:\n        raise ValueError('Invalid diff size')\n    return True">
-            <input type="hidden" id="contractReqs" value="Code must implement atomic database storage for replay protection, use strict Regex for EVM address validation, and prevent Python boolean type coercion. Both Evaluator and Critic must output VERDICT: APPROVED.">
+            <input type="hidden" id="diff-content" value="import re\n\nclass MockDatabase:\n    def __init__(self):\n        self.ledger = set()\n    def insert_atomic(self, tx_id):\n        if tx_id in self.ledger:\n            return False\n        self.ledger.add(tx_id)\n        return True\n\ndb = MockDatabase()\n\ndef process_milestone_payment(milestone_id, amount, recipient_address):\n    if type(amount) is not int or amount <= 0:\n        raise ValueError('Strictly positive integer required')\n    if not re.match(r'^0x[a-fA-F0-9]{40}$', recipient_address):\n        raise ValueError('Invalid EVM hex address')\n    if not db.insert_atomic(milestone_id):\n        raise ValueError('Replay attack')\n    return True\n\ndef verify_contract_compliance(pr_diff, acceptance_criteria):\n    if not pr_diff or len(pr_diff) < 10:\n        raise ValueError('Invalid diff size')\n    return True">
+            <input type="hidden" id="contract-reqs" value="Code must implement atomic database storage for replay protection, use strict Regex for EVM address validation, and prevent Python boolean type coercion. Both Evaluator and Critic must output VERDICT: APPROVED.">
 
-            <button onclick="runVerification()" 
-                    class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 bg-[length:200%_auto] hover:bg-right text-white font-bold py-3.5 rounded-lg transition-all duration-300 shadow-[0_0_20px_rgba(79,70,229,0.35)] hover:shadow-[0_0_25px_rgba(79,70,229,0.55)] cursor-pointer">
-                Run Multi-Agent Consensus Audit
+            <!-- Submit Button with built-in Spinner -->
+            <button id="audit-btn" onclick="startAudit()" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-lg transition duration-200 flex items-center justify-center shadow-lg shadow-blue-500/25 mt-5 cursor-pointer">
+                <span id="btn-text">Run Multi-Agent Consensus Audit</span>
+                <div id="loading-spinner" class="loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5 ml-3 hidden"></div>
             </button>
-        </div>
-
-        <!-- Loading State -->
-        <div id="loading" class="hidden mt-6 p-6 rounded-xl bg-slate-950/40 border border-slate-800 text-center">
-            <div class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-            <p class="text-sm text-blue-400 font-semibold animate-pulse">Running AST function parser & Gemini security audit...</p>
-        </div>
-
-        <!-- Results Section -->
-        <div id="results" class="hidden mt-6 space-y-4 border-t border-slate-800 pt-6">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Agent Consensus Telemetry</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Hidden status text -->
+            <p id="audit-status" class="text-center text-xs text-blue-400 mt-2 font-medium animate-pulse hidden">
+                AST parser running & Gemini AI agents auditing PR... Please wait.
+            </p>
+        </div>
+
+        <!-- Telemetry Results Section -->
+        <div id="results" class="hidden mt-6 space-y-4 border-t border-gray-800 pt-5">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-gray-400">Agent Consensus Telemetry</h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <!-- Evaluator Card -->
-                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-blue-400 text-xs tracking-wider uppercase">Evaluator Agent</span>
-                        <span id="evaluatorBadge" class="text-xs px-2 py-0.5 rounded font-mono font-bold"></span>
+                <div class="p-3 bg-gray-950/80 border border-gray-800 rounded-xl">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-blue-400 text-xs uppercase tracking-wider">Evaluator Agent</span>
+                        <span id="evaluatorBadge" class="text-[11px] px-2 py-0.5 rounded font-mono font-bold"></span>
                     </div>
-                    <pre id="evaluatorNotes" class="text-[11px] text-slate-300 bg-slate-900/90 p-2.5 rounded border border-slate-800/80 overflow-x-auto max-h-36 whitespace-pre-wrap font-mono"></pre>
+                    <pre id="evaluatorNotes" class="text-[11px] text-gray-300 bg-gray-900/90 p-2 rounded border border-gray-800 overflow-x-auto max-h-28 whitespace-pre-wrap font-mono"></pre>
                 </div>
 
                 <!-- Critic Card -->
-                <div class="p-4 bg-slate-950/60 border border-slate-800 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-purple-400 text-xs tracking-wider uppercase">Critic Agent</span>
-                        <span id="criticBadge" class="text-xs px-2 py-0.5 rounded font-mono font-bold"></span>
+                <div class="p-3 bg-gray-950/80 border border-gray-800 rounded-xl">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-bold text-purple-400 text-xs uppercase tracking-wider">Critic Agent</span>
+                        <span id="criticBadge" class="text-[11px] px-2 py-0.5 rounded font-mono font-bold"></span>
                     </div>
-                    <pre id="criticNotes" class="text-[11px] text-slate-300 bg-slate-900/90 p-2.5 rounded border border-slate-800/80 overflow-x-auto max-h-36 whitespace-pre-wrap font-mono"></pre>
+                    <pre id="criticNotes" class="text-[11px] text-gray-300 bg-gray-900/90 p-2 rounded border border-gray-800 overflow-x-auto max-h-28 whitespace-pre-wrap font-mono"></pre>
                 </div>
             </div>
 
             <!-- Success Box -->
-            <div id="paymentContainer" class="p-5 bg-emerald-950/30 border border-emerald-500/40 rounded-xl text-center hidden">
-                <p class="text-emerald-400 font-bold text-sm mb-3">Consensus Reached: AST & Security Verification Passed</p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div id="paymentContainer" class="p-4 bg-emerald-950/30 border border-emerald-500/40 rounded-xl text-center hidden space-y-3">
+                <p class="text-emerald-400 font-bold text-sm">Consensus Reached: AST & Security Verification Passed</p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
                     <button id="payModalBtn" onclick="triggerOpenCheckout()" 
-                       class="inline-block bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-extrabold text-sm transition shadow-[0_0_20px_rgba(59,130,246,0.35)] cursor-pointer">
+                       class="w-full sm:w-auto inline-flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg font-bold text-xs transition shadow-md shadow-blue-500/20 cursor-pointer">
                         💳 Unlock via Razorpay Modal
                     </button>
                     <a id="paymentLink" href="#" target="_blank" 
-                       class="inline-block bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-6 py-2.5 rounded-lg font-extrabold text-sm transition shadow-[0_0_20px_rgba(16,185,129,0.35)]">
+                       class="w-full sm:w-auto inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-gray-950 px-5 py-2.5 rounded-lg font-bold text-xs transition shadow-md shadow-emerald-500/20">
                         🔗 Open Hosted Payment Link
                     </a>
                 </div>
@@ -100,11 +111,12 @@
             
             <!-- Error Box -->
             <div id="errorContainer" class="p-4 bg-rose-950/30 border border-rose-500/40 rounded-xl text-center hidden">
-                <p id="errorMessage" class="text-rose-400 font-semibold text-sm"></p>
+                <p id="errorMessage" class="text-rose-400 font-semibold text-xs"></p>
             </div>
         </div>
     </div>
 
+    <!-- Logic -->
     <script>
         let currentOrderId = null;
         let currentAmount = 50000;
@@ -124,49 +136,42 @@
         }
         document.addEventListener('DOMContentLoaded', fetchConfig);
 
-        // Call this when your swarm approves the PR
-        function openCheckout(orderId, amount, keyId) {
-            const activeKey = keyId || currentKeyId;
-            if (!activeKey) {
-                alert("Razorpay Key ID is not configured. Please ensure RAZORPAY_KEY_ID is set in your backend .env file.");
+        async function startAudit() {
+            const urlInput = document.getElementById('pr-url').value.trim();
+            const amountInRupees = parseInt(document.getElementById('escrow-amount').value) || 0;
+            
+            const errorMsg = document.getElementById('url-error');
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('loading-spinner');
+            const btn = document.getElementById('audit-btn');
+            const status = document.getElementById('audit-status');
+
+            // 1. STRICT GITHUB URL VALIDATION
+            if (!urlInput.includes("github.com") && !urlInput.includes("githubusercontent.com")) {
+                errorMsg.classList.remove('hidden');
                 return;
             }
-            var options = {
-                "key": activeKey, // Fetched securely from backend .env, never hardcoded in git!
-                "amount": amount,
-                "currency": "INR",
-                "name": "EscrowAI",
-                "description": "Milestone Settlement",
-                "order_id": orderId, 
-                "theme": { "color": "#3399cc" },
-                "handler": function (response) {
-                    alert("Milestone Settlement Released! Razorpay Payment ID: " + response.razorpay_payment_id);
-                }
-            };
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
-        }
+            errorMsg.classList.add('hidden');
 
-        function triggerOpenCheckout() {
-            if (currentOrderId) {
-                openCheckout(currentOrderId, currentAmount, currentKeyId);
-            } else {
-                alert("No active approved escrow order found. Run verification first.");
-            }
-        }
+            // 2. TRIGGER LOADING ANIMATIONS
+            btn.disabled = true;
+            btn.classList.replace('bg-blue-600', 'bg-gray-700');
+            btn.classList.replace('hover:bg-blue-500', 'hover:bg-gray-700');
+            btn.classList.remove('shadow-blue-500/25');
+            btnText.innerText = "Auditing PR with AI Swarm...";
+            spinner.classList.remove('hidden');
+            status.classList.remove('hidden');
 
-        async function runVerification() {
-            document.getElementById('loading').classList.remove('hidden');
             document.getElementById('results').classList.add('hidden');
             document.getElementById('paymentContainer').classList.add('hidden');
             document.getElementById('errorContainer').classList.add('hidden');
 
-            const amountInRupees = parseInt(document.getElementById('amount').value) || 0;
+            // 3. CALL MULTI-AGENT BACKEND AUDIT (/verify-pr)
             const payload = {
-                pr_url: document.getElementById('prUrl').value,
+                pr_url: urlInput,
                 payout_amount: amountInRupees * 100,
-                contract_requirements: document.getElementById('contractReqs').value,
-                diff_content: document.getElementById('diffContent').value.replace(/\\n/g, '\n')
+                contract_requirements: document.getElementById('contract-reqs').value,
+                diff_content: document.getElementById('diff-content').value.replace(/\\n/g, '\n')
             };
 
             try {
@@ -177,29 +182,30 @@
                 });
                 
                 const data = await response.json();
-                
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('results').classList.remove('hidden');
 
+                // 4. RESET UI BUTTON UPON COMPLETION
+                resetUI();
+
+                // 5. RENDER AGENT TELEMETRY
+                document.getElementById('results').classList.remove('hidden');
                 const evalAgent = data.ai_agent_feedback.evaluator;
                 const criticAgent = data.ai_agent_feedback.critic;
-                
-                // Badges & Notes
+
                 const evalBadge = document.getElementById('evaluatorBadge');
                 evalBadge.innerText = evalAgent.verdict;
                 evalBadge.className = evalAgent.verdict === 'APPROVED' 
-                    ? 'text-xs px-2 py-0.5 rounded font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' 
-                    : 'text-xs px-2 py-0.5 rounded font-mono font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30';
+                    ? 'text-[11px] px-2 py-0.5 rounded font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' 
+                    : 'text-[11px] px-2 py-0.5 rounded font-mono font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30';
                 document.getElementById('evaluatorNotes').innerText = evalAgent.raw_response;
 
                 const critBadge = document.getElementById('criticBadge');
                 critBadge.innerText = criticAgent.verdict;
                 critBadge.className = criticAgent.verdict === 'APPROVED' 
-                    ? 'text-xs px-2 py-0.5 rounded font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' 
-                    : 'text-xs px-2 py-0.5 rounded font-mono font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30';
+                    ? 'text-[11px] px-2 py-0.5 rounded font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30' 
+                    : 'text-[11px] px-2 py-0.5 rounded font-mono font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30';
                 document.getElementById('criticNotes').innerText = criticAgent.raw_response;
 
-                // Settlement Logic Gate
+                // 6. SETTLEMENT LOGIC GATE
                 if (data.both_approved) {
                     const payContainer = document.getElementById('paymentContainer');
                     const payLink = document.getElementById('paymentLink');
@@ -232,7 +238,7 @@
                         }
                     }
 
-                    // Call openCheckout when your swarm approves the PR
+                    // Automatically trigger Razorpay checkout modal when swarm approves!
                     if (currentOrderId) {
                         openCheckout(currentOrderId, currentAmount, currentKeyId);
                     }
@@ -241,16 +247,66 @@
                     const errMsg = document.getElementById('errorMessage');
                     errContainer.classList.remove('hidden');
                     if (!data.both_approved) {
-                        errMsg.innerText = "Escrow Locked: AI Critic detected security vulnerabilities in submitted diff.";
+                        errMsg.innerText = "Escrow Locked: AI Critic detected security vulnerabilities in submitted code.";
                     } else {
                         errMsg.innerText = `Razorpay Gateway Notice: ${data.payment_link || 'Payment creation failed.'}`;
                     }
                 }
 
-            } catch (error) {
-                document.getElementById('loading').classList.add('hidden');
-                alert("Cannot connect to backend server. Make sure your FastAPI terminal is running.");
+            } catch (err) {
+                console.error(err);
+                alert("The AI Audit failed or backend server took too long to respond. Make sure FastAPI server is running.");
+                resetUI();
             }
+        }
+
+        function resetUI() {
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('loading-spinner');
+            const btn = document.getElementById('audit-btn');
+            const status = document.getElementById('audit-status');
+            
+            btn.disabled = false;
+            btn.classList.replace('bg-gray-700', 'bg-blue-600');
+            btn.classList.replace('hover:bg-gray-700', 'hover:bg-blue-500');
+            btn.classList.add('shadow-blue-500/25');
+            btnText.innerText = "Run Multi-Agent Consensus Audit";
+            spinner.classList.add('hidden');
+            status.classList.add('hidden');
+        }
+
+        function triggerOpenCheckout() {
+            if (currentOrderId) {
+                openCheckout(currentOrderId, currentAmount, currentKeyId);
+            } else {
+                alert("No active approved escrow order found. Please run the verification first.");
+            }
+        }
+
+        function openCheckout(orderId, amount, keyId) {
+            const activeKey = keyId || currentKeyId;
+            if (!activeKey) {
+                alert("Razorpay Key ID is not configured. Please ensure RAZORPAY_KEY_ID is set in your backend .env file.");
+                return;
+            }
+
+            var options = {
+                "key": activeKey, // Fetched dynamically from backend, never hardcoded in git!
+                "amount": amount,
+                "currency": "INR",
+                "name": "EscrowAI",
+                "description": "Milestone Settlement",
+                "order_id": orderId, 
+                "handler": function (response) {
+                    console.log("Payment ID: ", response.razorpay_payment_id);
+                    alert("Milestone Settlement Released! Payment ID: " + response.razorpay_payment_id);
+                },
+                "theme": {
+                    "color": "#3b82f6"
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
         }
     </script>
 </body>
